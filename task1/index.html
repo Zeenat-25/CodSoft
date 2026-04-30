@@ -2,260 +2,403 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>TIC-TAC-TOE AI</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23060b14'/><rect width='32' height='32' rx='6' fill='none' stroke='%2300f5ff' stroke-width='1.5' opacity='0.6'/><line x1='11' y1='4' x2='11' y2='28' stroke='%231e3a5f' stroke-width='1.2'/><line x1='21' y1='4' x2='21' y2='28' stroke='%231e3a5f' stroke-width='1.2'/><line x1='4' y1='11' x2='28' y2='11' stroke='%231e3a5f' stroke-width='1.2'/><line x1='4' y1='21' x2='28' y2='21' stroke='%231e3a5f' stroke-width='1.2'/><text x='6' y='10' font-family='Arial Black' font-size='7' font-weight='900' fill='%2300f5ff'>X</text><text x='14' y='20' font-family='Arial Black' font-size='7' font-weight='900' fill='%23cc44ff'>O</text><text x='22.5' y='30' font-family='Arial Black' font-size='7' font-weight='900' fill='%2300f5ff'>X</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  :root{
-    --bg:#060b14;
-    --surface:#0d1520;
-    --card:#111c2a;
-    --border:#1e3a5f;
-    --cyan:#00f5ff;
-    --magenta:#cc44ff;
-    --cyan-dim:#0099aa;
-    --magenta-dim:#8822bb;
-    --text:#c8dff0;
-    --text-dim:#5a7a99;
-    --glow-c:0 0 20px rgba(0,245,255,0.4);
-    --glow-m:0 0 20px rgba(204,68,255,0.4);
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;overflow:hidden;}
+
+:root{
+  --bg:#060b14;
+  --card:#111c2a;
+  --border:#1e3a5f;
+  --cyan:#00f5ff;
+  --magenta:#cc44ff;
+  --cyan-dim:#0099aa;
+  --text:#c8dff0;
+  --text-dim:#5a7a99;
+  --glow-c:0 0 20px rgba(0,245,255,0.4);
+  --glow-m:0 0 20px rgba(204,68,255,0.4);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Share Tech Mono',monospace;
+}
+
+/* bg grid */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+/* ===================== SCREENS ===================== */
+.screen{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  z-index:10;
+  transition:opacity 0.3s;
+  overflow:hidden;
+}
+.screen.hidden{opacity:0;pointer-events:none;}
+
+/* ===================== LOGIN ===================== */
+#login-screen,#register-screen{
+  align-items:center;
+  justify-content:center;
+  padding:max(var(--safe-top),20px) 20px max(var(--safe-bot),20px);
+  overflow-y:auto;
+}
+
+.login-box{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:36px 28px;
+  width:100%;
+  max-width:400px;
+  text-align:center;
+  box-shadow:0 0 60px rgba(0,245,255,0.08);
+}
+.login-box h1{font-family:'Orbitron',monospace;font-size:20px;color:var(--cyan);letter-spacing:3px;margin-bottom:4px;}
+.login-box p{color:var(--text-dim);font-size:11px;letter-spacing:2px;margin-bottom:28px;}
+.input-group{text-align:left;margin-bottom:14px;}
+.input-group label{font-size:10px;color:var(--text-dim);letter-spacing:2px;display:block;margin-bottom:6px;}
+.input-group input{
+  width:100%;background:#0a1525;border:1px solid var(--border);
+  color:var(--text);font-family:'Share Tech Mono',monospace;
+  font-size:16px;/* 16px prevents iOS zoom */
+  padding:13px 14px;border-radius:10px;outline:none;transition:border-color 0.2s;
+}
+.input-group input:focus{border-color:var(--cyan);}
+.btn-cyber{
+  width:100%;padding:14px;background:transparent;
+  border:1px solid var(--cyan);color:var(--cyan);
+  font-family:'Orbitron',monospace;font-size:12px;letter-spacing:2px;
+  border-radius:10px;cursor:pointer;transition:all 0.2s;margin-top:8px;
+}
+.btn-cyber:active{background:rgba(0,245,255,0.15);}
+.btn-cyber.magenta{border-color:var(--magenta);color:var(--magenta);}
+.btn-cyber.magenta:active{background:rgba(204,68,255,0.15);}
+.login-switch{margin-top:18px;font-size:11px;color:var(--text-dim);}
+.login-switch span{color:var(--cyan);cursor:pointer;}
+.error-msg{color:#ff4466;font-size:11px;margin-top:6px;min-height:16px;}
+
+/* ===================== GAME SCREEN ===================== */
+#game-screen{
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+
+/* TOP BAR */
+.topbar{
+  flex-shrink:0;
+  padding:max(var(--safe-top),10px) 16px 10px;
+  background:rgba(6,11,20,0.97);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:50;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.topbar-title{font-family:'Orbitron',monospace;font-size:14px;color:var(--cyan);letter-spacing:3px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.mode-badge{
+  background:rgba(0,245,255,0.08);border:1px solid var(--cyan-dim);
+  color:var(--cyan);font-size:10px;letter-spacing:1px;
+  padding:5px 10px;border-radius:20px;cursor:pointer;
+  display:flex;align-items:center;gap:5px;
+}
+.mode-dot{width:6px;height:6px;background:var(--cyan);border-radius:50%;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.2;}}
+.icon-btn{
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  color:var(--text-dim);width:34px;height:34px;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;
+}
+.icon-btn:active{border-color:var(--cyan);color:var(--cyan);}
+
+/* SCROLL AREA */
+.game-scroll{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+
+/* ===== MOBILE LAYOUT (default) ===== */
+.game-body{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:14px 14px 8px;
+  gap:12px;
+  min-height:100%;
+}
+
+/* Score strip — horizontal on mobile */
+.score-strip{
+  width:100%;
+  display:flex;
+  gap:8px;
+}
+.score-chip{
+  flex:1;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  text-align:center;
+}
+.score-chip.cyan-left{border-left:3px solid var(--cyan);}
+.score-chip.magenta-left{border-left:3px solid var(--magenta);}
+.score-chip.draw-left{border-left:3px solid #444;}
+.chip-label{font-size:8px;letter-spacing:2px;color:var(--text-dim);margin-bottom:2px;}
+.chip-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--text);}
+.chip-val.c{color:var(--cyan);}
+.chip-val.m{color:var(--magenta);}
+.chip-sub{font-size:8px;color:var(--text-dim);letter-spacing:1px;}
+
+/* CENTER CARD */
+.center-card{
+  width:100%;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:20px 16px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.game-title{font-family:'Orbitron',monospace;font-size:14px;color:var(--text);letter-spacing:2px;margin-bottom:2px;text-align:center;}
+.game-subtitle{font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:14px;text-align:center;}
+
+.status-bar{
+  background:#080f1a;border:1px solid var(--border);
+  border-radius:24px;padding:8px 18px;
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:16px;width:100%;justify-content:center;
+}
+.status-text{font-size:11px;letter-spacing:2px;color:var(--text);}
+.status-dots{display:flex;gap:4px;}
+.status-dot{width:4px;height:4px;background:var(--magenta);border-radius:50%;animation:blink 1s infinite;}
+.status-dot:nth-child(2){animation-delay:0.3s;}
+.status-dot:nth-child(3){animation-delay:0.6s;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+
+/* BOARD — fills available width */
+.board{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  width:100%;
+  margin-bottom:16px;
+}
+.cell{
+  aspect-ratio:1;
+  background:#0a1525;
+  border:1px solid var(--border);
+  border-radius:12px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;
+  font-size:clamp(24px,10vw,52px);
+  font-weight:900;
+  transition:all 0.12s;
+  position:relative;overflow:hidden;
+  -webkit-user-select:none;user-select:none;
+}
+.cell:active:not(.taken){background:#0f1f35;border-color:var(--cyan-dim);}
+.cell.x{color:var(--cyan);text-shadow:0 0 16px rgba(0,245,255,0.5);}
+.cell.o{color:var(--magenta);text-shadow:0 0 16px rgba(204,68,255,0.5);}
+.cell.taken{cursor:default;}
+.cell.win-cell{animation:winPulse 0.4s ease forwards;}
+@keyframes winPulse{0%{transform:scale(1);}50%{transform:scale(1.1);}100%{transform:scale(1.05);}}
+.cell.pop{animation:pop 0.15s ease;}
+@keyframes pop{from{transform:scale(0.75);}to{transform:scale(1);}}
+
+.restart-btn{
+  background:var(--cyan);color:#060b14;
+  font-family:'Orbitron',monospace;font-size:12px;letter-spacing:2px;
+  border:none;border-radius:10px;padding:13px 0;
+  cursor:pointer;width:100%;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all 0.15s;
+  box-shadow:0 0 24px rgba(0,245,255,0.25);
+}
+.restart-btn:active{transform:scale(0.97);}
+
+/* Session + resources row */
+.info-strip{
+  width:100%;
+  display:flex;
+  gap:8px;
+}
+.info-chip{
+  flex:1;background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:12px;
+}
+.info-chip-label{font-size:8px;letter-spacing:2px;color:var(--cyan);margin-bottom:4px;}
+.info-chip-val{font-size:11px;color:var(--text);letter-spacing:1px;word-break:break-all;}
+.cpu-bar{height:3px;background:rgba(0,245,255,0.12);border-radius:2px;margin-top:6px;overflow:hidden;}
+.cpu-bar-fill{height:100%;background:var(--cyan);border-radius:2px;transition:width 1s;}
+.cpu-text{font-size:10px;color:var(--text-dim);}
+
+/* Neural viz chip */
+.neural-chip{
+  flex:1;background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:0;overflow:hidden;cursor:pointer;
+  position:relative;min-height:70px;display:flex;align-items:center;justify-content:center;
+}
+.neural-chip canvas{position:absolute;inset:0;width:100%;height:100%;}
+.neural-label{font-size:9px;letter-spacing:2px;color:var(--magenta);position:relative;z-index:1;text-align:center;}
+
+/* BOTTOM BAR */
+.bottombar{
+  flex-shrink:0;
+  width:100%;
+  border-top:1px solid var(--border);
+  background:rgba(6,11,20,0.97);
+  display:flex;justify-content:space-around;
+  padding:8px 0 max(var(--safe-bot),8px);
+  z-index:50;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.bottom-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;padding:6px 16px;border-radius:10px;
+  color:var(--text-dim);font-size:9px;letter-spacing:1px;
+  border:none;background:transparent;transition:color 0.15s;
+  -webkit-user-select:none;user-select:none;
+}
+.bottom-btn.active{color:var(--cyan);}
+.bottom-btn:active{color:var(--cyan);}
+.bottom-btn svg{width:22px;height:22px;}
+
+/* ===== OVERLAYS ===== */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(6,11,20,0.93);
+  z-index:200;
+  display:flex;align-items:flex-end;/* sheet from bottom on mobile */
+  justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.25s;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  padding:0;
+}
+.overlay.visible{opacity:1;pointer-events:all;}
+.overlay-box{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px 20px 0 0;
+  padding:20px 20px max(var(--safe-bot),20px);
+  width:100%;
+  max-height:85vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  transform:translateY(20px);
+  transition:transform 0.25s;
+}
+.overlay.visible .overlay-box{transform:translateY(0);}
+.overlay-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.overlay-title{font-family:'Orbitron',monospace;font-size:16px;color:var(--cyan);letter-spacing:2px;margin-bottom:2px;}
+.overlay-sub{font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:20px;}
+
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;margin-bottom:8px;border:1px solid var(--border);background:#0a1525;}
+.lb-rank{width:28px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--text-dim);}
+.lb-rank.gold{color:#ffd700;}
+.lb-rank.silver{color:#c0c0c0;}
+.lb-rank.bronze{color:#cd7f32;}
+.lb-name{flex:1;font-size:13px;color:var(--text);}
+.lb-wins{font-family:'Orbitron',monospace;color:var(--cyan);font-size:15px;font-weight:700;}
+.lb-wins-label{font-size:9px;color:var(--text-dim);letter-spacing:1px;text-align:right;}
+.lb-close{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;padding:12px;border-radius:10px;cursor:pointer;margin-top:12px;width:100%;}
+.lb-close:active{border-color:var(--cyan);color:var(--cyan);}
+.lb-empty{text-align:center;color:var(--text-dim);font-size:13px;padding:24px;}
+.you-badge{background:rgba(0,245,255,0.1);border:1px solid var(--cyan-dim);color:var(--cyan);font-size:9px;padding:2px 6px;border-radius:4px;}
+
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);gap:12px;}
+.setting-label{font-size:13px;color:var(--text);}
+.setting-sub{font-size:10px;color:var(--text-dim);margin-top:2px;}
+.toggle{position:relative;width:48px;height:26px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:#1e3a5f;border-radius:13px;cursor:pointer;transition:background 0.2s;}
+.toggle-slider::before{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;background:var(--text-dim);border-radius:50%;transition:all 0.2s;}
+.toggle input:checked+.toggle-slider{background:rgba(0,245,255,0.3);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(22px);background:var(--cyan);}
+.mode-select{display:flex;gap:6px;flex-shrink:0;}
+.mode-opt{background:#0a1525;border:1px solid var(--border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all 0.15s;}
+.mode-opt.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,245,255,0.08);}
+
+/* WIN BANNER */
+.banner{
+  position:fixed;top:80px;left:50%;transform:translateX(-50%);
+  background:var(--card);border:1px solid var(--cyan);
+  border-radius:12px;padding:12px 24px;
+  font-family:'Orbitron',monospace;font-size:14px;color:var(--cyan);
+  letter-spacing:2px;z-index:300;
+  animation:bannerIn 0.3s ease;
+  text-align:center;white-space:nowrap;
+  max-width:90vw;
+}
+.banner.magenta{border-color:var(--magenta);color:var(--magenta);}
+@keyframes bannerIn{from{opacity:0;transform:translateX(-50%) translateY(-16px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+/* ===== TABLET & DESKTOP ===== */
+@media(min-width:768px){
+  /* Center overlay like a modal on bigger screens */
+  .overlay{align-items:center;}
+  .overlay-box{border-radius:20px;max-width:480px;padding:32px;}
+  .overlay-handle{display:none;}
+
+  .game-body{
+    flex-direction:row;
+    align-items:flex-start;
+    justify-content:center;
+    padding:28px 24px;
+    gap:20px;
+    max-width:960px;
+    margin:0 auto;
   }
-  body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden;}
 
-  /* Background grid */
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  /* Left panel */
+  .score-strip{flex-direction:column;width:200px;flex-shrink:0;}
+  .score-chip{text-align:left;}
+  .chip-val{font-size:28px;}
 
-  /* SCREENS */
-  .screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;transition:opacity 0.4s;overflow-y:auto;padding:16px 0;}
-  .screen.hidden{opacity:0;pointer-events:none;}
+  /* Center stretches */
+  .center-card{max-width:420px;padding:28px 24px;}
+  .game-title{font-size:17px;}
+  .game-subtitle{font-size:10px;}
+  .cell{font-size:clamp(32px,5vw,52px);}
 
-  /* LOGIN */
-  .login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:48px 40px;width:min(380px,calc(100vw - 32px));text-align:center;box-shadow:0 0 60px rgba(0,245,255,0.08);}
-  .login-box h1{font-family:'Orbitron',monospace;font-size:22px;color:var(--cyan);letter-spacing:3px;margin-bottom:6px;}
-  .login-box p{color:var(--text-dim);font-size:12px;letter-spacing:2px;margin-bottom:32px;}
-  .input-group{text-align:left;margin-bottom:16px;}
-  .input-group label{font-size:11px;color:var(--text-dim);letter-spacing:2px;display:block;margin-bottom:6px;}
-  .input-group input{width:100%;background:#0a1525;border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:14px;padding:12px 14px;border-radius:8px;outline:none;transition:border-color 0.2s;}
-  .input-group input:focus{border-color:var(--cyan);box-shadow:var(--glow-c);}
-  .btn-cyber{width:100%;padding:13px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:'Orbitron',monospace;font-size:13px;letter-spacing:3px;border-radius:8px;cursor:pointer;transition:all 0.2s;margin-top:8px;}
-  .btn-cyber:hover{background:rgba(0,245,255,0.1);box-shadow:var(--glow-c);}
-  .btn-cyber.magenta{border-color:var(--magenta);color:var(--magenta);}
-  .btn-cyber.magenta:hover{background:rgba(204,68,255,0.1);box-shadow:var(--glow-m);}
-  .login-switch{margin-top:20px;font-size:12px;color:var(--text-dim);}
-  .login-switch span{color:var(--cyan);cursor:pointer;text-decoration:underline;}
-  .error-msg{color:#ff4466;font-size:11px;margin-top:8px;min-height:16px;}
+  /* Info strip becomes right panel */
+  .info-strip{flex-direction:column;width:200px;flex-shrink:0;}
+  .neural-chip{min-height:100px;}
 
-  /* GAME LAYOUT */
-  #game-screen{flex-direction:column;background:var(--bg);z-index:5;overflow-y:auto;}
+  .bottom-btn svg{width:24px;height:24px;}
+  .bottom-btn{font-size:10px;padding:8px 20px;}
+}
 
-  /* TOP BAR */
-  .topbar{width:100%;background:rgba(6,11,20,0.95);border-bottom:1px solid var(--border);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);}
-  .topbar-title{font-family:'Orbitron',monospace;font-size:16px;color:var(--cyan);letter-spacing:4px;}
-  .topbar-right{display:flex;align-items:center;gap:12px;}
-  .mode-badge{background:rgba(0,245,255,0.1);border:1px solid var(--cyan-dim);color:var(--cyan);font-size:11px;letter-spacing:2px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
-  .mode-badge:hover{background:rgba(0,245,255,0.2);}
-  .mode-dot{width:8px;height:8px;background:var(--cyan);border-radius:50%;animation:pulse 1.5s infinite;}
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-  .icon-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-dim);width:36px;height:36px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.2s;}
-  .icon-btn:hover{border-color:var(--cyan);color:var(--cyan);}
-
-  /* MAIN AREA */
-  .game-main{display:flex;gap:24px;padding:32px;max-width:1200px;margin:0 auto;width:100%;align-items:flex-start;}
-
-  /* SIDE PANELS */
-  .side-panel{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:16px;}
-  .panel-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
-  .panel-card.cyan-accent{border-left:3px solid var(--cyan);}
-  .panel-card.magenta-accent{border-left:3px solid var(--magenta);}
-  .panel-label{font-size:10px;letter-spacing:3px;color:var(--cyan);margin-bottom:8px;}
-  .panel-label.magenta{color:var(--magenta);}
-  .session-value{font-size:13px;color:var(--text);letter-spacing:1px;}
-  .score-row{display:flex;align-items:baseline;justify-content:space-between;margin:4px 0;}
-  .score-num{font-family:'Orbitron',monospace;font-size:28px;font-weight:700;color:var(--text);}
-  .score-num.magenta{color:var(--magenta);}
-  .score-tag{font-size:11px;color:var(--text-dim);letter-spacing:1px;}
-  .cpu-bar-wrap{margin-top:8px;}
-  .cpu-bar{height:4px;background:rgba(0,245,255,0.15);border-radius:2px;margin-top:6px;overflow:hidden;}
-  .cpu-bar-fill{height:100%;background:var(--cyan);border-radius:2px;transition:width 1s;}
-  .cpu-text{font-size:11px;color:var(--text-dim);}
-  .neural-viz{background:#080f1a;border-radius:8px;height:80px;display:flex;align-items:center;justify-content:center;margin-top:8px;overflow:hidden;position:relative;}
-  .neural-viz canvas{position:absolute;inset:0;}
-  .neural-label{font-size:11px;letter-spacing:2px;color:var(--magenta);position:relative;z-index:1;}
-
-  /* CENTER GAME */
-  .game-center{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;}
-  .center-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;display:flex;flex-direction:column;align-items:center;width:100%;max-width:480px;box-shadow:0 0 80px rgba(0,0,0,0.5);}
-  .game-title{font-family:'Orbitron',monospace;font-size:18px;color:var(--text);letter-spacing:3px;margin-bottom:4px;}
-  .game-subtitle{font-size:10px;color:var(--text-dim);letter-spacing:3px;margin-bottom:24px;}
-  .status-bar{background:#080f1a;border:1px solid var(--border);border-radius:24px;padding:10px 20px;display:flex;align-items:center;gap:10px;margin-bottom:24px;min-width:220px;justify-content:center;}
-  .status-icon{font-size:14px;}
-  .status-text{font-size:12px;letter-spacing:2px;color:var(--text);}
-  .status-dots{display:flex;gap:4px;}
-  .status-dot{width:5px;height:5px;background:var(--magenta);border-radius:50%;animation:blink 1s infinite;}
-  .status-dot:nth-child(2){animation-delay:0.3s;}
-  .status-dot:nth-child(3){animation-delay:0.6s;}
-  @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
-
-  /* BOARD */
-  .board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;width:100%;max-width:360px;}
-  .cell{width:100%;aspect-ratio:1;background:#0a1525;border:1px solid var(--border);border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:clamp(28px,8vw,44px);font-weight:900;transition:all 0.15s;position:relative;overflow:hidden;}
-  .cell::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,245,255,0.05),transparent 70%);opacity:0;transition:opacity 0.2s;}
-  .cell:hover:not(.taken)::before{opacity:1;}
-  .cell:hover:not(.taken){border-color:var(--cyan-dim);}
-  .cell.x{color:var(--cyan);text-shadow:0 0 20px rgba(0,245,255,0.6);}
-  .cell.o{color:var(--magenta);text-shadow:0 0 20px rgba(204,68,255,0.6);}
-  .cell.taken{cursor:default;}
-  .cell.win-cell{animation:winPulse 0.5s ease forwards;}
-  @keyframes winPulse{0%{transform:scale(1);}50%{transform:scale(1.08);}100%{transform:scale(1.04);}}
-  .cell.pop{animation:pop 0.2s ease;}
-  @keyframes pop{0%{transform:scale(0.8);}100%{transform:scale(1);}}
-
-  /* RESTART BTN */
-  .restart-btn{background:var(--cyan);color:#060b14;font-family:'Orbitron',monospace;font-size:13px;letter-spacing:3px;border:none;border-radius:10px;padding:15px 40px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.2s;box-shadow:0 0 30px rgba(0,245,255,0.3);}
-  .restart-btn:hover{box-shadow:0 0 50px rgba(0,245,255,0.5);transform:translateY(-1px);}
-  .restart-icon{font-size:16px;}
-
-  /* BOTTOM BAR */
-  .bottombar{width:100%;border-top:1px solid var(--border);background:rgba(6,11,20,0.95);display:flex;justify-content:space-around;padding:12px 0 8px;position:sticky;bottom:0;z-index:100;}
-  .bottom-btn{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 24px;border-radius:12px;transition:all 0.2s;color:var(--text-dim);font-size:10px;letter-spacing:2px;border:none;background:transparent;}
-  .bottom-btn.active{background:rgba(0,245,255,0.1);color:var(--cyan);}
-  .bottom-btn:hover{color:var(--cyan);}
-  .bottom-icon{font-size:22px;}
-
-  /* LEADERBOARD OVERLAY */
-  .overlay{position:fixed;inset:0;background:rgba(6,11,20,0.92);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;backdrop-filter:blur(4px);}
-  .overlay.visible{opacity:1;pointer-events:all;}
-  .overlay-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px;width:min(500px,calc(100vw - 32px));max-height:85vh;overflow-y:auto;box-shadow:0 0 80px rgba(0,245,255,0.1);}
-  .overlay-title{font-family:'Orbitron',monospace;font-size:18px;color:var(--cyan);letter-spacing:3px;margin-bottom:4px;}
-  .overlay-sub{font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:28px;}
-  .lb-row{display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:10px;margin-bottom:8px;border:1px solid var(--border);background:#0a1525;transition:all 0.2s;}
-  .lb-row:hover{border-color:var(--cyan-dim);}
-  .lb-rank{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--text-dim);width:32px;text-align:center;}
-  .lb-rank.gold{color:#ffd700;}
-  .lb-rank.silver{color:#c0c0c0;}
-  .lb-rank.bronze{color:#cd7f32;}
-  .lb-name{flex:1;font-size:14px;color:var(--text);}
-  .lb-wins{font-family:'Orbitron',monospace;color:var(--cyan);font-size:16px;font-weight:700;}
-  .lb-wins-label{font-size:10px;color:var(--text-dim);letter-spacing:1px;}
-  .lb-close{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;padding:10px 24px;border-radius:8px;cursor:pointer;margin-top:16px;transition:all 0.2s;}
-  .lb-close:hover{border-color:var(--cyan);color:var(--cyan);}
-  .lb-empty{text-align:center;color:var(--text-dim);font-size:13px;padding:24px;}
-  .you-badge{background:rgba(0,245,255,0.1);border:1px solid var(--cyan-dim);color:var(--cyan);font-size:10px;padding:2px 8px;border-radius:4px;letter-spacing:1px;}
-
-  /* SETTINGS OVERLAY */
-  .setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
-  .setting-label{font-size:13px;color:var(--text);}
-  .setting-sub{font-size:11px;color:var(--text-dim);}
-  .toggle{position:relative;width:44px;height:24px;}
-  .toggle input{opacity:0;width:0;height:0;}
-  .toggle-slider{position:absolute;inset:0;background:#1e3a5f;border-radius:12px;cursor:pointer;transition:background 0.2s;}
-  .toggle-slider::before{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;background:var(--text-dim);border-radius:50%;transition:all 0.2s;}
-  .toggle input:checked + .toggle-slider{background:rgba(0,245,255,0.3);}
-  .toggle input:checked + .toggle-slider::before{transform:translateX(20px);background:var(--cyan);}
-  .mode-select{display:flex;gap:8px;}
-  .mode-opt{background:#0a1525;border:1px solid var(--border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.2s;}
-  .mode-opt.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,245,255,0.08);}
-  .mode-opt:hover{border-color:var(--cyan-dim);}
-
-  /* WIN/DRAW BANNER */
-  .banner{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--cyan);border-radius:14px;padding:16px 40px;font-family:'Orbitron',monospace;font-size:18px;color:var(--cyan);letter-spacing:3px;z-index:300;box-shadow:var(--glow-c);animation:bannerIn 0.3s ease;text-align:center;}
-  .banner.magenta{border-color:var(--magenta);color:var(--magenta);box-shadow:var(--glow-m);}
-  @keyframes bannerIn{from{opacity:0;transform:translateX(-50%) translateY(-20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-
-  /* ===== FULLY RESPONSIVE ===== */
-
-  /* Tablet landscape & small desktop (≤1024px) */
-  @media(max-width:1024px){
-    .side-panel{width:180px;}
-    .cell{width:96px;height:96px;font-size:40px;}
-    .center-card{padding:24px 20px;}
-  }
-
-  /* Tablet portrait (≤900px) — stack everything vertically */
-  @media(max-width:900px){
-    .game-main{flex-direction:column;align-items:center;padding:16px 12px;gap:16px;}
-    .side-panel{width:100%;flex-direction:row;flex-wrap:wrap;gap:12px;}
-    .panel-card{flex:1;min-width:140px;}
-    .cell{width:100px;height:100px;font-size:42px;}
-    .center-card{max-width:100%;}
-    .score-num{font-size:24px;}
-  }
-
-  /* Large phone (≤640px) */
-  @media(max-width:640px){
-    .topbar{padding:0 12px;height:50px;}
-    .topbar-title{font-size:12px;letter-spacing:2px;}
-    .mode-badge{font-size:10px;padding:5px 10px;letter-spacing:1px;}
-    .icon-btn{width:32px;height:32px;font-size:14px;}
-
-    .game-main{padding:10px 8px;gap:10px;}
-    .side-panel{gap:8px;}
-    .panel-card{padding:14px 12px;}
-    .panel-label{font-size:9px;letter-spacing:2px;}
-    .session-value{font-size:11px;}
-    .score-num{font-size:20px;}
-    .score-tag{font-size:10px;}
-
-    .center-card{padding:20px 14px;border-radius:14px;}
-    .game-title{font-size:14px;letter-spacing:2px;}
-    .game-subtitle{font-size:9px;letter-spacing:2px;margin-bottom:16px;}
-    .status-bar{padding:8px 14px;margin-bottom:16px;min-width:unset;width:100%;}
-    .status-text{font-size:11px;letter-spacing:1px;}
-
-    /* Board fills screen width smartly */
-    .board{gap:8px;width:100%;}
-    .cell{width:auto;height:auto;aspect-ratio:1;font-size:clamp(28px,10vw,44px);}
-
-    .restart-btn{font-size:11px;letter-spacing:2px;padding:13px 24px;width:100%;justify-content:center;}
-
-    .bottom-btn{padding:6px 12px;font-size:9px;letter-spacing:1px;}
-    .bottom-btn svg{width:20px;height:20px;}
-
-    .overlay-box{width:calc(100vw - 32px);padding:24px 20px;border-radius:14px;}
-    .overlay-title{font-size:15px;letter-spacing:2px;}
-    .lb-name{font-size:12px;}
-    .lb-wins{font-size:14px;}
-
-    .banner{font-size:13px;letter-spacing:2px;padding:12px 20px;width:90%;text-align:center;}
-  }
-
-  /* Small phone (≤390px) — iPhone SE, small Androids */
-  @media(max-width:390px){
-    .topbar-title{font-size:10px;letter-spacing:1px;}
-    .mode-badge span{display:none;}
-    .game-title{font-size:12px;}
-    .cell{font-size:clamp(24px,9vw,36px);}
-    .board{gap:6px;}
-    .panel-card{min-width:120px;}
-    .bottom-btn{padding:5px 8px;}
-  }
-
-  /* Fix login box on small screens */
-  @media(max-width:420px){
-    .login-box{width:calc(100vw - 32px);padding:32px 20px;margin:16px;}
-    .login-box h1{font-size:18px;letter-spacing:2px;}
-    .btn-cyber{font-size:11px;letter-spacing:2px;}
-  }
-
-  /* Ensure overlay never overflows on tiny screens */
-  @media(max-width:360px){
-    .overlay-box{padding:20px 14px;}
-    .setting-row{flex-wrap:wrap;gap:10px;}
-    .mode-select{width:100%;}
-  }
-
-  /* Safe area support for iOS (notch/home bar) */
-  @supports(padding-bottom: env(safe-area-inset-bottom)){
-    .bottombar{padding-bottom:calc(8px + env(safe-area-inset-bottom));}
-    .topbar{padding-top:env(safe-area-inset-top);}
-  }
+@media(min-width:1024px){
+  .score-strip{width:220px;}
+  .info-strip{width:220px;}
+  .center-card{max-width:460px;}
+  .topbar-title{font-size:16px;letter-spacing:4px;}
+}
 </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div class="screen" id="login-screen">
   <div class="login-box">
     <h1>TIC-TAC-TOE AI</h1>
@@ -271,11 +414,11 @@
     <div class="error-msg" id="login-error"></div>
     <button class="btn-cyber" onclick="handleLogin()">ESTABLISH LINK</button>
     <button class="btn-cyber magenta" onclick="showRegister()" style="margin-top:10px;">CREATE ACCOUNT</button>
-    <div class="login-switch">Demo: use any username + any password</div>
+    <div class="login-switch">Demo: any username + any password</div>
   </div>
 </div>
 
-<!-- REGISTER SCREEN -->
+<!-- REGISTER -->
 <div class="screen hidden" id="register-screen">
   <div class="login-box">
     <h1>TIC-TAC-TOE AI</h1>
@@ -298,9 +441,9 @@
   </div>
 </div>
 
-<!-- GAME SCREEN -->
+<!-- GAME -->
 <div class="screen hidden" id="game-screen">
-  <!-- TOP BAR -->
+
   <div class="topbar">
     <div class="topbar-title">TIC-TAC-TOE AI</div>
     <div class="topbar-right">
@@ -308,47 +451,45 @@
         <div class="mode-dot"></div>
         <span id="mode-label">AI MODE: HARD</span>
       </div>
-      <button class="icon-btn" onclick="openSettings()" title="Settings">⚙</button>
-      <button class="icon-btn" onclick="handleLogout()" title="Logout">⏻</button>
+      <button class="icon-btn" onclick="openSettings()">⚙</button>
+      <button class="icon-btn" onclick="handleLogout()">⏻</button>
     </div>
   </div>
 
-  <!-- MAIN -->
-  <div class="game-main">
-    <!-- LEFT PANEL -->
-    <div class="side-panel">
-      <div class="panel-card cyan-accent">
-        <div class="panel-label">SESSION</div>
-        <div class="session-value" id="session-name">NEURAL_LINK_ESTABLISHED</div>
-      </div>
-      <div class="panel-card magenta-accent">
-        <div class="panel-label magenta">SCORE</div>
-        <div class="score-row">
-          <div>
-            <div class="score-num" id="player-score">00</div>
-            <div class="score-tag">PLAYER</div>
-          </div>
-        </div>
-        <div class="score-row">
-          <div>
-            <div class="score-num magenta" id="ai-score">00</div>
-            <div class="score-tag">AI_CORES</div>
-          </div>
-        </div>
-        <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;">
-          <div class="score-tag">DRAWS</div>
-          <div class="score-num" id="draw-score" style="font-size:18px;">00</div>
-        </div>
-      </div>
-    </div>
+  <div class="game-scroll">
+    <div class="game-body">
 
-    <!-- CENTER -->
-    <div class="game-center">
+      <!-- SCORES -->
+      <div class="score-strip">
+        <div class="score-chip cyan-left">
+          <div class="chip-label">SESSION</div>
+          <div class="chip-sub" id="session-name" style="font-size:10px;color:var(--text);margin-top:2px;">—</div>
+        </div>
+        <div class="score-chip magenta-left">
+          <div class="chip-label">SCORE</div>
+          <div style="display:flex;gap:12px;align-items:flex-end;margin-top:4px;">
+            <div>
+              <div class="chip-val c" id="player-score">00</div>
+              <div class="chip-sub">PLAYER</div>
+            </div>
+            <div>
+              <div class="chip-val m" id="ai-score">00</div>
+              <div class="chip-sub">AI</div>
+            </div>
+            <div>
+              <div class="chip-val" id="draw-score" style="font-size:18px;">00</div>
+              <div class="chip-sub">DRAW</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOARD CARD -->
       <div class="center-card">
         <div class="game-title">TIC-TAC-TOE AI</div>
         <div class="game-subtitle">PLAY AGAINST AN UNBEATABLE AI</div>
         <div class="status-bar">
-          <span class="status-icon">⊕</span>
+          <span style="font-size:13px;">⊕</span>
           <span class="status-text" id="status-text">YOUR TURN</span>
           <div class="status-dots" id="status-dots" style="display:none;">
             <div class="status-dot"></div>
@@ -357,55 +498,50 @@
           </div>
         </div>
         <div class="board" id="board"></div>
-        <button class="restart-btn" onclick="restartGame()">
-          <span class="restart-icon">↺</span> RESTART GAME
-        </button>
+        <button class="restart-btn" onclick="restartGame()">↺ &nbsp;RESTART GAME</button>
       </div>
-    </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="side-panel">
-      <div class="panel-card">
-        <div class="panel-label">RESOURCES</div>
-        <div class="cpu-bar-wrap">
+      <!-- INFO -->
+      <div class="info-strip">
+        <div class="info-chip">
+          <div class="info-chip-label">RESOURCES</div>
           <div class="cpu-text" id="cpu-text">CPU_USAGE: 0%</div>
           <div class="cpu-bar"><div class="cpu-bar-fill" id="cpu-fill" style="width:0%"></div></div>
         </div>
-      </div>
-      <div class="panel-card" style="cursor:pointer;" onclick="openLeaderboard()">
-        <div class="panel-label">LEADERBOARD</div>
-        <div class="neural-viz">
+        <div class="neural-chip" onclick="openLeaderboard()">
           <canvas id="neural-canvas"></canvas>
           <span class="neural-label">VIEW RANKINGS →</span>
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- BOTTOM BAR -->
   <div class="bottombar">
     <button class="bottom-btn active" onclick="restartGame()">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
       RESTART
     </button>
-    <button class="bottom-btn" onclick="toggleAudio()" id="audio-btn">
-      <svg id="audio-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+    <button class="bottom-btn" onclick="toggleAudio()">
+      <svg id="audio-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
       AUDIO
     </button>
     <button class="bottom-btn" onclick="openLeaderboard()">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 0 0 5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 1 0 5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 0 0 5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 1 0 5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
       BOARD
     </button>
     <button class="bottom-btn" onclick="openSettings()">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
       SETTINGS
     </button>
   </div>
+
 </div>
 
 <!-- LEADERBOARD OVERLAY -->
 <div class="overlay" id="lb-overlay">
   <div class="overlay-box">
+    <div class="overlay-handle"></div>
     <div class="overlay-title">LEADERBOARD</div>
     <div class="overlay-sub">TOP NEURAL AGENTS — WIN COUNT</div>
     <div id="lb-list"></div>
@@ -415,7 +551,8 @@
 
 <!-- SETTINGS OVERLAY -->
 <div class="overlay" id="settings-overlay">
-  <div class="overlay-box" style="width:min(420px,calc(100vw - 32px));">
+  <div class="overlay-box">
+    <div class="overlay-handle"></div>
     <div class="overlay-title">SETTINGS</div>
     <div class="overlay-sub">CONFIGURE NEURAL PARAMETERS</div>
 
@@ -446,10 +583,10 @@
         <div class="setting-label">PLAYER</div>
         <div class="setting-sub" id="settings-player-name">—</div>
       </div>
-      <button class="lb-close" onclick="handleLogout()" style="margin-top:0;">LOGOUT</button>
+      <button class="lb-close" onclick="handleLogout()" style="margin-top:0;width:auto;padding:10px 20px;">LOGOUT</button>
     </div>
 
-    <button class="lb-close" onclick="closeSettings()" style="margin-top:20px;">CLOSE</button>
+    <button class="lb-close" onclick="closeSettings()" style="margin-top:16px;">CLOSE</button>
   </div>
 </div>
 
@@ -457,33 +594,25 @@
 <div class="banner" id="banner" style="display:none;"></div>
 
 <script>
-// ========== STATE ==========
-let currentUser = null;
-let users = JSON.parse(localStorage.getItem('ttt_users') || '{}');
-let board = Array(9).fill('');
-let gameOver = false;
-let playerTurn = true;
-let scores = {player:0, ai:0, draw:0};
-let aiMode = 'HARD';
-let audioEnabled = true;
-let cpuInterval = null;
+let currentUser=null;
+let users=JSON.parse(localStorage.getItem('ttt_users')||'{}');
+let board=Array(9).fill('');
+let gameOver=false;
+let playerTurn=true;
+let scores={player:0,ai:0,draw:0};
+let aiMode='HARD';
+let audioEnabled=true;
+let cpuInterval=null;
 
-// ========== AUTH ==========
 function handleLogin(){
-  const u = document.getElementById('login-username').value.trim();
-  const p = document.getElementById('login-password').value;
+  const u=document.getElementById('login-username').value.trim();
+  const p=document.getElementById('login-password').value;
   if(!u){setError('login-error','USERNAME REQUIRED');return;}
   if(!p){setError('login-error','PASSWORD REQUIRED');return;}
-  // Auto-create if not exists (demo mode)
   if(!users[u.toLowerCase()]){
-    users[u.toLowerCase()]={username:u,password:p,wins:0,games:0};
-    saveUsers();
-  } else if(users[u.toLowerCase()].password !== p){
-    setError('login-error','INVALID CREDENTIALS');return;
-  }
-  currentUser = u.toLowerCase();
-  scores={player:0,ai:0,draw:0};
-  startGame();
+    users[u.toLowerCase()]={username:u,password:p,wins:0,games:0};saveUsers();
+  } else if(users[u.toLowerCase()].password!==p){setError('login-error','INVALID CREDENTIALS');return;}
+  currentUser=u.toLowerCase();scores={player:0,ai:0,draw:0};startGame();
 }
 
 function handleRegister(){
@@ -495,31 +624,13 @@ function handleRegister(){
   if(!p||p.length<4){setError('reg-error','MIN 4 CHAR PASSWORD');return;}
   if(p!==c){setError('reg-error','PASSWORDS DO NOT MATCH');return;}
   if(users[u.toLowerCase()]){setError('reg-error','USERNAME TAKEN');return;}
-  users[u.toLowerCase()]={username:u,password:p,wins:0,games:0};
-  saveUsers();
-  currentUser=u.toLowerCase();
-  scores={player:0,ai:0,draw:0};
-  startGame();
+  users[u.toLowerCase()]={username:u,password:p,wins:0,games:0};saveUsers();
+  currentUser=u.toLowerCase();scores={player:0,ai:0,draw:0};startGame();
 }
 
-function handleLogout(){
-  currentUser=null;
-  closeSettings();
-  document.getElementById('game-screen').classList.add('hidden');
-  showLogin();
-}
-
-function showLogin(){
-  document.getElementById('register-screen').classList.add('hidden');
-  document.getElementById('login-screen').classList.remove('hidden');
-  document.getElementById('login-error').textContent='';
-  document.getElementById('login-password').value='';
-}
-function showRegister(){
-  document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('register-screen').classList.remove('hidden');
-  document.getElementById('reg-error').textContent='';
-}
+function handleLogout(){currentUser=null;closeSettings();document.getElementById('game-screen').classList.add('hidden');showLogin();}
+function showLogin(){document.getElementById('register-screen').classList.add('hidden');document.getElementById('login-screen').classList.remove('hidden');document.getElementById('login-error').textContent='';document.getElementById('login-password').value='';}
+function showRegister(){document.getElementById('login-screen').classList.add('hidden');document.getElementById('register-screen').classList.remove('hidden');document.getElementById('reg-error').textContent='';}
 function setError(id,msg){document.getElementById(id).textContent=msg;}
 function saveUsers(){localStorage.setItem('ttt_users',JSON.stringify(users));}
 
@@ -530,27 +641,18 @@ function startGame(){
   const ud=users[currentUser];
   document.getElementById('session-name').textContent=ud.username.toUpperCase()+'_LINKED';
   document.getElementById('settings-player-name').textContent=ud.username.toUpperCase();
-  updateScoreDisplay();
-  initBoard();
-  startCPUAnimation();
-  drawNeural();
+  updateScoreDisplay();initBoard();startCPUAnimation();
+  setTimeout(drawNeural,100);
   setMode(aiMode);
 }
 
-// ========== BOARD ==========
 function initBoard(){
-  board=Array(9).fill('');
-  gameOver=false;
-  playerTurn=true;
-  hideBanner();
-  setStatus('YOUR TURN',false);
-  updateScoreDisplay();
-  renderBoard();
+  board=Array(9).fill('');gameOver=false;playerTurn=true;
+  hideBanner();setStatus('YOUR TURN',false);updateScoreDisplay();renderBoard();
 }
 
 function renderBoard(){
-  const el=document.getElementById('board');
-  el.innerHTML='';
+  const el=document.getElementById('board');el.innerHTML='';
   board.forEach((v,i)=>{
     const cell=document.createElement('div');
     cell.className='cell'+(v?' taken '+v.toLowerCase():'');
@@ -561,113 +663,62 @@ function renderBoard(){
 }
 
 function playerMove(i){
-  if(board[i]||gameOver||!playerTurn) return;
-  board[i]='X';
-  playerTurn=false;
-  renderBoard();
-  playClick();
-  const cells=document.querySelectorAll('.cell');
-  cells[i].classList.add('pop');
-  if(checkEnd('X')) return;
+  if(board[i]||gameOver||!playerTurn)return;
+  board[i]='X';playerTurn=false;renderBoard();playClick();
+  document.querySelectorAll('.cell')[i].classList.add('pop');
+  if(checkEnd('X'))return;
   setStatus('AI THINKING...',true);
-  setTimeout(aiMove, aiMode==='HARD'?600:300);
+  setTimeout(aiMove,aiMode==='HARD'?600:300);
 }
 
 function aiMove(){
-  if(gameOver) return;
-  let move = aiMode==='HARD' ? bestMove() : easyMove();
-  if(move===-1) return;
-  board[move]='O';
-  playerTurn=true;
-  renderBoard();
-  playClick();
+  if(gameOver)return;
+  let move=aiMode==='HARD'?bestMove():easyMove();
+  if(move===-1)return;
+  board[move]='O';playerTurn=true;renderBoard();playClick();
   const cells=document.querySelectorAll('.cell');
-  if(cells[move]) cells[move].classList.add('pop');
-  if(checkEnd('O')) return;
+  if(cells[move])cells[move].classList.add('pop');
+  if(checkEnd('O'))return;
   setStatus('YOUR TURN',false);
 }
 
 function easyMove(){
-  // 50% random, 50% smart
-  if(Math.random()<0.5){
-    const empty=board.map((v,i)=>v?-1:i).filter(i=>i>=0);
-    return empty.length?empty[Math.floor(Math.random()*empty.length)]:-1;
-  }
+  if(Math.random()<0.5){const e=board.map((v,i)=>v?-1:i).filter(i=>i>=0);return e.length?e[Math.floor(Math.random()*e.length)]:-1;}
   return bestMove();
 }
 
-// Minimax
 function bestMove(){
   let best=-Infinity,move=-1;
-  for(let i=0;i<9;i++){
-    if(!board[i]){
-      board[i]='O';
-      const s=minimax(board,0,false,-Infinity,Infinity);
-      board[i]='';
-      if(s>best){best=s;move=i;}
-    }
-  }
+  for(let i=0;i<9;i++){if(!board[i]){board[i]='O';const s=minimax(board,0,false,-Infinity,Infinity);board[i]='';if(s>best){best=s;move=i;}}}
   return move;
 }
 function minimax(b,depth,isMax,alpha,beta){
   const w=winner(b);
-  if(w==='O') return 10-depth;
-  if(w==='X') return depth-10;
-  if(b.every(v=>v)) return 0;
-  if(isMax){
-    let best=-Infinity;
-    for(let i=0;i<9;i++){
-      if(!b[i]){b[i]='O';best=Math.max(best,minimax(b,depth+1,false,alpha,beta));b[i]='';alpha=Math.max(alpha,best);if(beta<=alpha)break;}
-    }
-    return best;
-  } else {
-    let best=Infinity;
-    for(let i=0;i<9;i++){
-      if(!b[i]){b[i]='X';best=Math.min(best,minimax(b,depth+1,true,alpha,beta));b[i]='';beta=Math.min(beta,best);if(beta<=alpha)break;}
-    }
-    return best;
-  }
+  if(w==='O')return 10-depth;
+  if(w==='X')return depth-10;
+  if(b.every(v=>v))return 0;
+  if(isMax){let best=-Infinity;for(let i=0;i<9;i++){if(!b[i]){b[i]='O';best=Math.max(best,minimax(b,depth+1,false,alpha,beta));b[i]='';alpha=Math.max(alpha,best);if(beta<=alpha)break;}}return best;}
+  else{let best=Infinity;for(let i=0;i<9;i++){if(!b[i]){b[i]='X';best=Math.min(best,minimax(b,depth+1,true,alpha,beta));b[i]='';beta=Math.min(beta,best);if(beta<=alpha)break;}}return best;}
 }
-
 function winner(b){
   const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-  for(const [a,c,d] of lines) if(b[a]&&b[a]===b[c]&&b[a]===b[d]) return b[a];
+  for(const[a,c,d]of lines)if(b[a]&&b[a]===b[c]&&b[a]===b[d])return b[a];
   return null;
 }
 
 function checkEnd(mark){
   const w=winner(board);
   if(w){
-    gameOver=true;
-    highlightWin(w);
+    gameOver=true;highlightWin(w);
     setTimeout(()=>{
-      if(w==='X'){
-        scores.player++;
-        users[currentUser].wins++;
-        users[currentUser].games=(users[currentUser].games||0)+1;
-        saveUsers();
-        showBanner('PLAYER WINS!',false);
-        playWin();
-      } else {
-        scores.ai++;
-        users[currentUser].games=(users[currentUser].games||0)+1;
-        saveUsers();
-        showBanner('AI WINS!',true);
-        playLose();
-      }
-      updateScoreDisplay();
-      setStatus(w==='X'?'PLAYER WINS!':'AI WINS!',false);
-    },200);
-    return true;
+      if(w==='X'){scores.player++;users[currentUser].wins++;users[currentUser].games=(users[currentUser].games||0)+1;saveUsers();showBanner('PLAYER WINS! 🎉',false);playWin();}
+      else{scores.ai++;users[currentUser].games=(users[currentUser].games||0)+1;saveUsers();showBanner('AI WINS!',true);playLose();}
+      updateScoreDisplay();setStatus(w==='X'?'PLAYER WINS!':'AI WINS!',false);
+    },200);return true;
   }
   if(board.every(v=>v)){
-    gameOver=true;
-    scores.draw++;
-    users[currentUser].games=(users[currentUser].games||0)+1;
-    saveUsers();
-    updateScoreDisplay();
-    setTimeout(()=>{showBanner('DRAW — NEURAL STALEMATE',true);setStatus('DRAW',false);},200);
-    return true;
+    gameOver=true;scores.draw++;users[currentUser].games=(users[currentUser].games||0)+1;saveUsers();updateScoreDisplay();
+    setTimeout(()=>{showBanner('DRAW — STALEMATE',true);setStatus('DRAW',false);},200);return true;
   }
   return false;
 }
@@ -675,48 +726,30 @@ function checkEnd(mark){
 function highlightWin(mark){
   const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   const cells=document.querySelectorAll('.cell');
-  for(const [a,b,c] of lines){
-    if(board[a]===mark&&board[b]===mark&&board[c]===mark){
-      [a,b,c].forEach(i=>cells[i].classList.add('win-cell'));
-      break;
-    }
-  }
+  for(const[a,b,c]of lines){if(board[a]===mark&&board[b]===mark&&board[c]===mark){[a,b,c].forEach(i=>cells[i].classList.add('win-cell'));break;}}
 }
 
 function restartGame(){hideBanner();initBoard();}
-
-function setStatus(text,thinking){
-  document.getElementById('status-text').textContent=text;
-  document.getElementById('status-dots').style.display=thinking?'flex':'none';
-}
-
+function setStatus(text,thinking){document.getElementById('status-text').textContent=text;document.getElementById('status-dots').style.display=thinking?'flex':'none';}
 function updateScoreDisplay(){
   document.getElementById('player-score').textContent=String(scores.player).padStart(2,'0');
   document.getElementById('ai-score').textContent=String(scores.ai).padStart(2,'0');
   document.getElementById('draw-score').textContent=String(scores.draw).padStart(2,'0');
 }
-
-// ========== MODE ==========
 function setMode(m){
-  aiMode=m;
-  document.getElementById('mode-label').textContent='AI MODE: '+m;
+  aiMode=m;document.getElementById('mode-label').textContent='AI MODE: '+m;
   document.querySelectorAll('.mode-opt').forEach(el=>el.classList.remove('active'));
   document.getElementById('mode-'+m.toLowerCase()).classList.add('active');
 }
-
-// ========== BANNER ==========
 function showBanner(text,isMagenta){
-  const b=document.getElementById('banner');
-  b.textContent=text;
-  b.className='banner'+(isMagenta?' magenta':'');
-  b.style.display='block';
+  const b=document.getElementById('banner');b.textContent=text;
+  b.className='banner'+(isMagenta?' magenta':'');b.style.display='block';
   setTimeout(hideBanner,3000);
 }
 function hideBanner(){document.getElementById('banner').style.display='none';}
 
-// ========== CPU ANIMATION ==========
 function startCPUAnimation(){
-  if(cpuInterval) clearInterval(cpuInterval);
+  if(cpuInterval)clearInterval(cpuInterval);
   cpuInterval=setInterval(()=>{
     const v=Math.floor(40+Math.random()*55);
     document.getElementById('cpu-text').textContent='CPU_USAGE: '+v+'%';
@@ -724,20 +757,20 @@ function startCPUAnimation(){
   },1200);
 }
 
-// ========== NEURAL CANVAS ==========
 function drawNeural(){
   const cv=document.getElementById('neural-canvas');
+  const p=cv.parentElement;
+  cv.width=p.offsetWidth;cv.height=p.offsetHeight;
   const ctx=cv.getContext('2d');
-  const W=cv.offsetWidth||200;const H=cv.offsetHeight||80;
-  cv.width=W;cv.height=H;
+  const W=cv.width,H=cv.height;
   const nodes=[];
-  for(let i=0;i<12;i++) nodes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4});
+  for(let i=0;i<10;i++)nodes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4});
   function frame(){
     ctx.clearRect(0,0,W,H);
     nodes.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;});
-    for(let i=0;i<nodes.length;i++) for(let j=i+1;j<nodes.length;j++){
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
       const d=Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y);
-      if(d<60){ctx.strokeStyle='rgba(204,68,255,'+(1-d/60)*0.5+')';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(nodes[i].x,nodes[i].y);ctx.lineTo(nodes[j].x,nodes[j].y);ctx.stroke();}
+      if(d<60){ctx.strokeStyle='rgba(204,68,255,'+(1-d/60)*.5+')';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(nodes[i].x,nodes[i].y);ctx.lineTo(nodes[j].x,nodes[j].y);ctx.stroke();}
     }
     nodes.forEach(n=>{ctx.fillStyle='rgba(204,68,255,0.8)';ctx.beginPath();ctx.arc(n.x,n.y,2,0,Math.PI*2);ctx.fill();});
     requestAnimationFrame(frame);
@@ -745,65 +778,57 @@ function drawNeural(){
   frame();
 }
 
-// ========== LEADERBOARD ==========
 function openLeaderboard(){
   const list=document.getElementById('lb-list');
   const sorted=Object.values(users).sort((a,b)=>(b.wins||0)-(a.wins||0));
-  if(!sorted.length){list.innerHTML='<div class="lb-empty">NO PLAYERS YET</div>';
-  } else {
+  if(!sorted.length){list.innerHTML='<div class="lb-empty">NO PLAYERS YET</div>';}
+  else{
     const ranks=[
-      `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#FFD700" stroke="#B8860B" stroke-width="1.5"/><path d="M12 6l1.5 3.5L17 10l-2.5 2.5.5 3.5L12 14.5 9 16l.5-3.5L7 10l3.5-.5L12 6z" fill="#FFF8DC" stroke="#B8860B" stroke-width="0.5"/></svg>`,
-      `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#C0C0C0" stroke="#808080" stroke-width="1.5"/><path d="M12 6l1.5 3.5L17 10l-2.5 2.5.5 3.5L12 14.5 9 16l.5-3.5L7 10l3.5-.5L12 6z" fill="#F0F0F0" stroke="#808080" stroke-width="0.5"/></svg>`,
-      `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#CD7F32" stroke="#8B4513" stroke-width="1.5"/><path d="M12 6l1.5 3.5L17 10l-2.5 2.5.5 3.5L12 14.5 9 16l.5-3.5L7 10l3.5-.5L12 6z" fill="#F5DEB3" stroke="#8B4513" stroke-width="0.5"/></svg>`
+      `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#FFD700" stroke="#B8860B" stroke-width="1.5"/><path d="M12 6l1.5 3.5L17 10l-2.5 2.5.5 3.5L12 14.5 9 16l.5-3.5L7 10l3.5-.5L12 6z" fill="#FFF8DC" stroke="#B8860B" stroke-width="0.5"/></svg>`,
+      `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#C0C0C0" stroke="#808080" stroke-width="1.5"/><path d="M12 6l1.5 3.5L17 10l-2.5 2.5.5 3.5L12 14.5 9 16l.5-3.5L7 10l3.5-.5L12 6z" fill="#F0F0F0" stroke="#808080" stroke-width="0.5"/></svg>`,
+      `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#CD7F32" stroke="#8B4513" stroke-width="1.5"/><path d="M12 6l1.5 3.5L17 10l-2.5 2.5.5 3.5L12 14.5 9 16l.5-3.5L7 10l3.5-.5L12 6z" fill="#F5DEB3" stroke="#8B4513" stroke-width="0.5"/></svg>`
     ];
-    const rankClass=['gold','silver','bronze'];
+    const rc=['gold','silver','bronze'];
     list.innerHTML=sorted.slice(0,20).map((u,i)=>`
       <div class="lb-row">
-        <div class="lb-rank ${rankClass[i]||''}" style="display:flex;align-items:center;justify-content:center;">${i<3?ranks[i]:i+1}</div>
-        <div class="lb-name">${u.username.toUpperCase()}${u.username.toLowerCase()===currentUser?'&nbsp;<span class="you-badge">YOU</span>':''}</div>
-        <div style="text-align:right;">
-          <div class="lb-wins">${u.wins||0}</div>
-          <div class="lb-wins-label">WINS</div>
-        </div>
+        <div class="lb-rank ${rc[i]||''}" style="display:flex;align-items:center;justify-content:center;">${i<3?ranks[i]:i+1}</div>
+        <div class="lb-name">${u.username.toUpperCase()}${u.username.toLowerCase()===currentUser?' <span class="you-badge">YOU</span>':''}</div>
+        <div style="text-align:right;"><div class="lb-wins">${u.wins||0}</div><div class="lb-wins-label">WINS</div></div>
       </div>`).join('');
   }
   document.getElementById('lb-overlay').classList.add('visible');
 }
 function closeLeaderboard(){document.getElementById('lb-overlay').classList.remove('visible');}
-
-// ========== SETTINGS ==========
 function openSettings(){document.getElementById('settings-overlay').classList.add('visible');}
 function closeSettings(){document.getElementById('settings-overlay').classList.remove('visible');}
 
-// ========== AUDIO ==========
 let AudioCtx=null;
-function getCtx(){if(!AudioCtx) AudioCtx=new(window.AudioContext||window.webkitAudioContext)();return AudioCtx;}
+function getCtx(){if(!AudioCtx)AudioCtx=new(window.AudioContext||window.webkitAudioContext)();return AudioCtx;}
 function beep(freq,dur,type='sine'){
-  if(!audioEnabled) return;
+  if(!audioEnabled)return;
   try{const c=getCtx();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=freq;o.type=type;g.gain.setValueAtTime(0.15,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+dur);o.start();o.stop(c.currentTime+dur);}catch(e){}
 }
 function playClick(){beep(440,0.05,'square');}
 function playWin(){[523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,0.15),i*150));}
 function playLose(){[300,250,200].forEach((f,i)=>setTimeout(()=>beep(f,0.2,'sawtooth'),i*120));}
-const SVG_AUDIO_ON=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
-const SVG_AUDIO_OFF=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
+
+const SVG_ON=`<svg id="audio-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+const SVG_OFF=`<svg id="audio-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
 function toggleAudio(){
   audioEnabled=!audioEnabled;
-  document.getElementById('audio-icon-svg').outerHTML=(audioEnabled?SVG_AUDIO_ON:SVG_AUDIO_OFF).replace('id="audio-icon-svg"','').replace('<svg','<svg id="audio-icon-svg"');
+  const el=document.getElementById('audio-icon-svg');
+  if(el){const tmp=document.createElement('div');tmp.innerHTML=audioEnabled?SVG_ON:SVG_OFF;el.replaceWith(tmp.firstChild);}
   document.getElementById('audio-toggle').checked=audioEnabled;
 }
 function toggleAudioFromSettings(){
   audioEnabled=document.getElementById('audio-toggle').checked;
   const el=document.getElementById('audio-icon-svg');
-  if(el) el.outerHTML=(audioEnabled?SVG_AUDIO_ON:SVG_AUDIO_OFF).replace('<svg','<svg id="audio-icon-svg"');
+  if(el){const tmp=document.createElement('div');tmp.innerHTML=audioEnabled?SVG_ON:SVG_OFF;el.replaceWith(tmp.firstChild);}
 }
 
-// ========== KEYBOARD ==========
 document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')handleLogin();});
 document.getElementById('login-username').addEventListener('keydown',e=>{if(e.key==='Enter')handleLogin();});
 document.getElementById('reg-confirm').addEventListener('keydown',e=>{if(e.key==='Enter')handleRegister();});
-
-// Click outside overlays
 document.getElementById('lb-overlay').addEventListener('click',function(e){if(e.target===this)closeLeaderboard();});
 document.getElementById('settings-overlay').addEventListener('click',function(e){if(e.target===this)closeSettings();});
 </script>
