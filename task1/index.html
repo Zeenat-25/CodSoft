@@ -514,7 +514,7 @@ function checkEnd(mark) {
         // Update Firebase win count atomically
         await runTransaction(ref(db, 'users/' + currentUser + '/wins'), (val) => (val || 0) + 1);
         await runTransaction(ref(db, 'users/' + currentUser + '/games'), (val) => (val || 0) + 1);
-        showBanner('PLAYER WINS! 🎉', false); playWin();
+        showBanner('PLAYER WINS!', false); playWin();
       } else {
         scores.ai++;
         await runTransaction(ref(db, 'users/' + currentUser + '/games'), (val) => (val || 0) + 1);
