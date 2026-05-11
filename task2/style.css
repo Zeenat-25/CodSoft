@@ -1,6 +1,3 @@
-/* ══════════════════════════════════════════
-   Z-ONE — style.css
-   ══════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -27,7 +24,7 @@ html, body {
   overflow: hidden;
 }
 
-/* ══ LOGIN ══ */
+
 #loginScreen {
   position: fixed; inset: 0;
   background: radial-gradient(ellipse at 60% 40%, #0a1628 0%, #05070f 70%);
@@ -91,11 +88,10 @@ html, body {
 }
 .login-hint strong { color: var(--text-muted); font-weight: 500; }
 
-/* ══ APP ══ */
 #app { display: none; height: 100vh; position: relative; }
 #app.visible { display: block; }
 
-/* ══ SIDEBAR ══ */
+
 .sidebar {
   position: fixed; top: 0; left: 0; bottom: 0;
   width: var(--sidebar-w); background: var(--panel);
@@ -210,29 +206,25 @@ html, body {
 }
 .main-content.full-width { left: 0; }
 
-/* ══ VIDEO STAGE ══ */
+
 .video-stage {
   flex: 1; position: relative;
   background: #000; overflow: hidden; min-height: 0;
 }
 
-/*
-  KEY FIX: Video is portrait/square. We position it absolutely,
-  fill the full stage height, and anchor it to the RIGHT side.
-  The left half stays dark for the response card.
-*/
+
 #zoneVideo {
   position: absolute;
   top: 0;
   right: 0;
   height: 100%;
-  width: auto;        /* maintain aspect ratio */
-  min-width: 50%;     /* take at least half the stage */
+  width: auto;        
+  min-width: 50%;     
   display: block;
   background: #000;
 }
 
-/* ══ RESPONSE CARD (left side, vertically centered) ══ */
+
 .response-card {
   position: absolute;
   left: 32px;
@@ -274,7 +266,7 @@ html, body {
   font-family: var(--font-ui); font-weight: 400;
 }
 
-/* ══ THINKING OVERLAY ══ */
+
 .thinking-overlay {
   position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%);
   display: none; align-items: center; gap: 10px;
@@ -296,7 +288,6 @@ html, body {
 }
 .thinking-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
 
-/* ══ STATUS BAR ══ */
 .video-status-bar {
   position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 8px;
@@ -310,7 +301,7 @@ html, body {
   animation: blink 2s ease-in-out infinite;
 }
 
-/* ══ INPUT BAR ══ */
+
 .input-bar {
   padding: 10px 20px 13px; background: var(--panel);
   border-top: 1px solid var(--border); flex-shrink: 0;
