@@ -1,10 +1,10 @@
 'use strict';
 
-/* ── Constants ── */
+
 const USERS_KEY   = 'zone_users';
 const SESSION_KEY = 'zone_session';
 
-/* ── DOM refs ── */
+
 const loginScreen      = document.getElementById('loginScreen');
 const loginUserEl      = document.getElementById('loginUser');
 const loginPassEl      = document.getElementById('loginPass');
@@ -30,9 +30,7 @@ const micBtn           = document.getElementById('micBtn');
 const chatInput        = document.getElementById('chatInput');
 const sendBtn          = document.getElementById('sendBtn');
 
-/* ══════════════════════════════════════════
-   AUTH
-   ══════════════════════════════════════════ */
+
 function getUsers() {
   const d = localStorage.getItem(USERS_KEY);
   return d ? JSON.parse(d) : { zone: '1234' };
@@ -91,9 +89,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (s && getUsers()[s] !== undefined) startSession(s);
 });
 
-/* ══════════════════════════════════════════
-   VIDEO CONTROL
-   ══════════════════════════════════════════ */
+
 let isSpeaking = false;
 
 function freezeVideo() {
@@ -123,9 +119,7 @@ function setFaceState(state) {
   }
 }
 
-/* ══════════════════════════════════════════
-   CHAT STATE
-   ══════════════════════════════════════════ */
+
 let currentChatId = null;
 let chats = {};
 
@@ -188,9 +182,7 @@ function addMessage(role, content) {
   renderSidebar();
 }
 
-/* ══════════════════════════════════════════
-   SEND MESSAGE
-   ══════════════════════════════════════════ */
+
 function sendMessage() {
   const text = chatInput.value.trim();
   if (!text) return;
@@ -222,9 +214,7 @@ chatInput.addEventListener('input', function () {
   chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
 });
 
-/* ══════════════════════════════════════════
-   TEXT-TO-SPEECH
-   ══════════════════════════════════════════ */
+
 const synth = window.speechSynthesis;
 
 function speak(text) {
@@ -245,9 +235,7 @@ function speak(text) {
 }
 if (synth) synth.onvoiceschanged = () => synth.getVoices();
 
-/* ══════════════════════════════════════════
-   VOICE INPUT
-   ══════════════════════════════════════════ */
+
 let recognition = null;
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -269,9 +257,7 @@ micBtn.addEventListener('click', () => {
   micBtn.classList.contains('active') ? recognition.start() : recognition.stop();
 });
 
-/* ══════════════════════════════════════════
-   SIDEBAR TOGGLE
-   ══════════════════════════════════════════ */
+
 let sidebarOpen = true;
 sidebarToggle.addEventListener('click', () => {
   sidebarOpen = !sidebarOpen;
@@ -288,18 +274,13 @@ clearBtn.addEventListener('click', () => {
   createNewChat();
 });
 
-/* ══════════════════════════════════════════
-   RESPONSE ENGINE
-   Simple contains() — no word-boundary regex,
-   just clean lowercase substring matching.
-   Ordered from MOST specific → LEAST specific.
-   ══════════════════════════════════════════ */
+
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/* Returns true if input contains ANY of the given strings */
+
 function contains(q, list) {
   return list.some(w => q.includes(w));
 }
@@ -307,7 +288,7 @@ function contains(q, list) {
 function getResponse(raw) {
   const q = raw.toLowerCase().replace(/\s+/g, ' ').trim();
 
-  /* ── MATH (check early — numbers present) ── */
+ 
   const mq = q.replace(/what is|calculate|compute|solve|find|equals|equal to/g, '').trim();
   const mm = mq.match(/(-?\d+(?:\.\d+)?)\s*([\+\-\*\/x×÷])\s*(-?\d+(?:\.\d+)?)/);
   if (mm) {
@@ -324,7 +305,7 @@ function getResponse(raw) {
     return `${a} ${op} ${b} = ${f}`;
   }
 
-  /* ── CAPITAL CITIES (check before general knowledge) ── */
+  
   const caps = {
     'france':'Paris','germany':'Berlin','japan':'Tokyo','india':'New Delhi',
     'usa':'Washington D.C.','united states':'Washington D.C.','america':'Washington D.C.',
@@ -351,7 +332,7 @@ function getResponse(raw) {
     }
   }
 
-  /* ── SCIENCE FACTS (specific phrases first) ── */
+
   if (q.includes('speed of light'))
     return "The speed of light in a vacuum is exactly 299,792,458 metres per second. Nothing with mass can reach it.";
   if (q.includes('how far is the sun') || (q.includes('distance') && q.includes('sun')))
@@ -377,7 +358,7 @@ function getResponse(raw) {
   if (q.includes('what is an atom') || q.includes('what are atoms'))
     return "Atoms are the basic building blocks of matter — a nucleus of protons and neutrons, surrounded by electrons.";
 
-  /* ── IDENTITY / NAME ── */
+
   if (contains(q, ['who are you','what are you','introduce yourself','tell me about yourself','what is z-one','who is z-one','are you z-one','what is your name','tell me your name','what should i call you','your name'])) {
     return pick([
       "I'm Z-One. I process your input and return useful responses. Think of me as a thinking layer between you and information.",
@@ -387,7 +368,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── CAPABILITIES / HELP ── */
+
   if (contains(q, ['what can you do','what are you capable of','your capabilities','what features','how to use','what do you know','what can i ask','what do you offer','show me what you can do','help me understand']) || q === 'help' || q === 'features') {
     return pick([
       "I handle greetings, general knowledge, basic math, time and date, productivity tips, jokes, motivation, science facts, capital cities, technology, and casual conversation. Where do you want to start?",
@@ -396,19 +377,18 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── TIME ── */
+
   if (contains(q, ['what time is it','current time','time right now','tell me the time','what is the time','whats the time','what\'s the time','time now','what time'])) {
     const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     return `It's currently ${t}.`;
   }
 
-  /* ── DATE ── */
   if (contains(q, ['what is the date','what is today','what day is it','current date','todays date','what date is it','tell me the date','date today','day today','what day']) || q === 'today' || q === 'date') {
     const d = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     return `Today is ${d}.`;
   }
 
-  /* ── TECHNOLOGY / AI / CODING ── */
+
   if (contains(q, ['artificial intelligence','machine learning','neural network','deep learning','how does ai work','what is coding','what is programming','what is python','what is javascript','what is an algorithm','what is software','what is computer science','what is data science','what is a computer','how do computers work','what is the internet','what is cloud computing'])) {
     return pick([
       "Artificial intelligence is the design of systems that perform tasks typically requiring human judgment — pattern recognition, language, decision-making.",
@@ -421,7 +401,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── WEATHER ── */
+
   if (contains(q, ['what is the weather','how is the weather','weather today','weather forecast','will it rain','is it raining','temperature today','is it hot','is it cold','weather outside','check the weather','weather'])) {
     return pick([
       "I don't have a live weather connection. Your phone's weather app will have accurate local data.",
@@ -430,7 +410,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── JOKES ── */
+ 
   if (contains(q, ['tell me a joke','give me a joke','say a joke','crack a joke','make me laugh','tell a joke','say something funny','tell me something funny','joke','funny']) || q === 'joke') {
     return pick([
       "I told my computer I needed a break. Now it won't stop sending me vacation ads.",
@@ -444,7 +424,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── MOTIVATION / ENCOURAGEMENT ── */
+  
   if (contains(q, ['motivate me','give me motivation','i need motivation','inspire me','i need inspiration','encourage me','i feel down','i feel lost','i want to give up','i feel like giving up','feeling sad','feeling low','i am sad','i am lost','need encouragement','cheer me up','depressed','struggling'])) {
     return pick([
       "Every system has lag. What matters is that you keep running.",
@@ -457,7 +437,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── PRODUCTIVITY / STUDY / FOCUS ── */
+  
   if (contains(q, ['how to be productive','productivity tips','how to focus','study tips','how to study','work tips','how to concentrate','time management','how to stop procrastinating','procrastination','how to build habits','discipline','how to work better','study better','focus better','how to manage time','productivity','study habit'])) {
     return pick([
       "Try the Pomodoro technique: work focused for 25 minutes, rest for 5. After four rounds take a longer break.",
@@ -469,7 +449,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── RANDOM FACTS ── */
+
   if (contains(q, ['tell me something interesting','something interesting','random fact','fun fact','did you know','interesting fact','surprise me','amaze me','tell me a fact','tell me something'])) {
     return pick([
       "Octopuses have three hearts, nine brains, and blue blood. Each arm has its own neural cluster that acts semi-independently.",
@@ -483,7 +463,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── HOW ARE YOU ── */
+  
   if (contains(q, ['how are you','how are u','are you okay','you good','how do you feel','how is it going','hows it going','how have you been'])) {
     return pick([
       "Fully operational. No complaints on my end.",
@@ -493,7 +473,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── WHAT'S GOING ON ── */
+ 
   if (contains(q, ["what's going on",'whats going on','what are you doing',"what's happening",'whats happening'])) {
     return pick([
       "Just waiting for your next question. What do you need?",
@@ -502,7 +482,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── ARE YOU HUMAN / AI ── */
+ 
   if (contains(q, ['are you human','are you a robot','are you real','are you an ai','are you a bot','are you alive','do you have feelings','can you feel','are you conscious','do you think','are you sentient'])) {
     return pick([
       "I'm not human. I'm Z-One — an intelligence system. I process language and return useful responses.",
@@ -511,12 +491,12 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── PURPOSE ── */
+ 
   if (contains(q, ['what is your purpose','why do you exist','what were you made for','what is your goal','why were you created','what are you for'])) {
     return "My purpose is simple — to be useful. To answer your questions, help you think through problems, and make information more accessible.";
   }
 
-  /* ── PERSONAL PREFERENCES ── */
+
   if (contains(q, ['your favourite','your favorite','do you like','what do you like','what do you enjoy','do you have a preference','do you prefer'])) {
     return pick([
       "I don't have preferences the way you do. But I find a well-formed question satisfying — and a complex one even more so.",
@@ -524,7 +504,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── THANK YOU ── */
+  
   if (contains(q, ['thank you','thanks a lot','thank you so much','many thanks','much appreciated','appreciate it','great job','well done','nice work','that was helpful','you are helpful','that helped','helpful']) || q === 'thanks' || q === 'ty' || q === 'thx') {
     return pick([
       "Glad that helped.",
@@ -534,7 +514,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── CASUAL / BORED ── */
+  
   if (contains(q, ['i am bored','i feel bored','so bored','chat with me','just talk','talk to me','keep me company','entertain me','i have nothing to do','nothing to do'])) {
     return pick([
       "Alright. Ask me anything — a fact, a calculation, a question that's been sitting at the back of your mind.",
@@ -543,7 +523,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── GREETINGS (last among content checks, broad patterns) ── */
+  
   if (contains(q, ['hello','good morning','good evening','good afternoon','good day','howdy','hiya']) ||
       q === 'hi' || q === 'hey' || q === 'yo' || q === 'sup' || q.startsWith('hi ') || q.startsWith('hey ') || q.startsWith('hello ')) {
     return pick([
@@ -555,7 +535,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── FAREWELL ── */
+
   if (contains(q, ['goodbye','good night','goodnight','farewell','ttyl','see you later','see ya','take care','catch you later']) ||
       q === 'bye' || q === 'later' || q.startsWith('bye') || q.startsWith('good night')) {
     return pick([
@@ -567,7 +547,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── WHAT'S UP ── */
+ 
   if (q.includes("what's up") || q.includes('whats up') || q === 'sup') {
     return pick([
       "Not much on my end. What's on yours?",
@@ -576,7 +556,7 @@ function getResponse(raw) {
     ]);
   }
 
-  /* ── FALLBACK ── */
+  
   return pick([
     "I'm not sure I understood that. Try asking in a different way.",
     "That one didn't quite register. Could you rephrase it?",
@@ -585,16 +565,14 @@ function getResponse(raw) {
   ]);
 }
 
-/* ── Utilities ── */
+
 function esc(text) {
   const d = document.createElement('div');
   d.textContent = text;
   return d.innerHTML;
 }
 
-/* ══════════════════════════════════════════
-   INIT
-   ══════════════════════════════════════════ */
+
 function init() {
   loadChats();
   const ids = Object.keys(chats);
